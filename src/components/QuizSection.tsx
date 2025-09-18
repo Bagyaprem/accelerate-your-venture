@@ -143,6 +143,7 @@ const QuizSection = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [randomizedQuestions, setRandomizedQuestions] = useState<Question[]>([]);
   
   const { toast } = useToast();
 
@@ -153,7 +154,7 @@ const QuizSection = () => {
   };
 
   const nextQuestion = () => {
-    if (currentQuestion < quizQuestions.length - 1) {
+    if (currentQuestion < randomizedQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       setShowResults(true);
@@ -179,8 +180,13 @@ const QuizSection = () => {
 
   const calculateScore = () => {
     return selectedAnswers.reduce((score, answer, index) => {
-      return score + (answer === quizQuestions[index].correct ? 1 : 0);
+      return score + (answer === randomizedQuestions[index].correct ? 1 : 0);
     }, 0);
+  };
+
+  const shuffleQuestions = () => {
+    const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5);
+    setRandomizedQuestions(shuffled);
   };
 
   const resetQuiz = () => {
@@ -188,6 +194,7 @@ const QuizSection = () => {
     setSelectedAnswers([]);
     setShowResults(false);
     setQuizStarted(false);
+    shuffleQuestions();
   };
 
   const getScoreColor = (score: number) => {
@@ -252,7 +259,10 @@ const QuizSection = () => {
                 <Button
                   variant="hero"
                   size="xl"
-                  onClick={() => setQuizStarted(true)}
+                  onClick={() => {
+                    shuffleQuestions();
+                    setQuizStarted(true);
+                  }}
                   className="w-full"
                 >
                   <Brain className="w-6 h-6" />
@@ -297,7 +307,7 @@ const QuizSection = () => {
 
               <div className="space-y-4">
                 <h4 className="font-semibold text-lg">Your Answers Review:</h4>
-                {quizQuestions.map((question, index) => (
+                {randomizedQuestions.map((question, index) => (
                   <div key={question.id} className="border rounded-lg p-4">
                     <div className="flex items-start gap-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${
@@ -343,8 +353,8 @@ const QuizSection = () => {
     );
   }
 
-  const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
-  const question = quizQuestions[currentQuestion];
+  const progress = ((currentQuestion + 1) / randomizedQuestions.length) * 100;
+  const question = randomizedQuestions[currentQuestion];
 
   return (
     <section id="quiz" className="py-20 bg-gradient-to-br from-purple-50 to-orange-50">
@@ -357,7 +367,7 @@ const QuizSection = () => {
                 <span className="font-semibold">Innovation Quiz</span>
               </div>
               <span className="text-sm text-muted-foreground">
-                {currentQuestion + 1} of {quizQuestions.length}
+                {currentQuestion + 1} of {randomizedQuestions.length}
               </span>
             </div>
             <Progress value={progress} className="w-full" />
@@ -392,7 +402,7 @@ const QuizSection = () => {
                 variant="default"
                 size="lg"
               >
-                {currentQuestion === quizQuestions.length - 1 ? "View Results" : "Next Question"}
+                {currentQuestion === randomizedQuestions.length - 1 ? "View Results" : "Next Question"}
               </Button>
             </div>
           </CardContent>

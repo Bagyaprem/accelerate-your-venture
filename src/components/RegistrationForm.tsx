@@ -92,6 +92,36 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1: return formData.leaderName.trim().length > 0;
+      case 2: return formData.email.trim().length > 0 && formData.email.includes('@');
+      case 3: return formData.whatsapp.trim().length >= 10;
+      case 4: return formData.state.trim().length > 0 && formData.district.trim().length > 0;
+      case 5: return formData.institution.trim().length > 0;
+      case 6: return formData.fieldOfStudy.trim().length > 0;
+      case 7: return formData.teamName.trim().length > 0;
+      case 8: return formData.teamMembers.some(member => member.trim().length > 0);
+      case 9: return formData.programFormat !== '';
+      case 10: return formData.projectDomain !== '';
+      case 11: return formData.projectDescription.trim().length > 0;
+      case 12: return formData.hasExperience !== '';
+      case 13: return formData.expectations.trim().length > 0;
+      default: return false;
+    }
+  };
+
+  const findFirstIncompleteStep = () => {
+    for (let step = 1; step <= totalSteps; step++) {
+      const currentStepTemp = currentStep;
+      setCurrentStep(step);
+      const isValid = isCurrentStepValid();
+      setCurrentStep(currentStepTemp);
+      if (!isValid) return step;
+    }
+    return null;
+  };
+
   const nextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -130,6 +160,17 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   };
 
   const handleSubmit = () => {
+    const incompleteStep = findFirstIncompleteStep();
+    if (incompleteStep) {
+      setCurrentStep(incompleteStep);
+      toast({
+        title: "Please complete all fields",
+        description: `Please fill in the required information on step ${incompleteStep}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     toast({
       title: "Registration Successful! 🎉",
       description: "Thank you for registering for ProductXcelerator. We'll send you further details via email.",
@@ -148,7 +189,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Every great team starts with a strong leader 🚀</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="leaderName">Full Name *</Label>
+              <Label htmlFor="leaderName" className="flex items-center gap-1">
+                Full Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="leaderName"
                 value={formData.leaderName}
@@ -170,7 +213,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Stay connected with innovation ✉️</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email" className="flex items-center gap-1">
+                Email Address <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -193,7 +238,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">We'll create a WhatsApp group for updates 📱</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp Number *</Label>
+              <Label htmlFor="whatsapp" className="flex items-center gap-1">
+                WhatsApp Number <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="whatsapp"
                 type="tel"
@@ -217,7 +264,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
+                <Label htmlFor="state" className="flex items-center gap-1">
+                  State <span className="text-red-500">*</span>
+                </Label>
                 <Select value={formData.state} onValueChange={(value) => updateFormData('state', value)}>
                   <SelectTrigger className="text-lg p-4">
                     <SelectValue placeholder="Select your state" />
@@ -232,7 +281,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="district">District/City *</Label>
+                <Label htmlFor="district" className="flex items-center gap-1">
+                  District/City <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="district"
                   value={formData.district}
@@ -255,8 +306,10 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Knowledge is the foundation of innovation 🎓</p>
             </div>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="institution">Institution/Organization Name *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="institution" className="flex items-center gap-1">
+                Institution/Organization Name <span className="text-red-500">*</span>
+              </Label>
                 <Input
                   id="institution"
                   value={formData.institution}
@@ -267,7 +320,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fieldOfStudy">Field of Study/Work *</Label>
+                <Label htmlFor="fieldOfStudy" className="flex items-center gap-1">
+                  Field of Study/Work <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="fieldOfStudy"
                   value={formData.fieldOfStudy}
@@ -290,7 +345,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Your team name builds your passion 💡</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="teamName">Team Name *</Label>
+              <Label htmlFor="teamName" className="flex items-center gap-1">
+                Team Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="teamName"
                 value={formData.teamName}
@@ -442,7 +499,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Tell us about your innovative idea 💭</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="projectDescription">Brief Project Description *</Label>
+              <Label htmlFor="projectDescription" className="flex items-center gap-1">
+                Brief Project Description <span className="text-red-500">*</span>
+              </Label>
               <Textarea
                 id="projectDescription"
                 value={formData.projectDescription}
@@ -464,7 +523,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Every expert was once a beginner 🌟</p>
             </div>
             <div className="space-y-4">
-              <Label>Previous Startup/Innovation Experience *</Label>
+              <Label className="flex items-center gap-1">
+                Previous Startup/Innovation Experience <span className="text-red-500">*</span>
+              </Label>
               <RadioGroup
                 value={formData.hasExperience}
                 onValueChange={(value: 'yes' | 'no') => updateFormData('hasExperience', value)}
@@ -498,7 +559,9 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <p className="text-muted-foreground">Dream big, achieve bigger 🎯</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="expectations">What do you expect from this program? *</Label>
+              <Label htmlFor="expectations" className="flex items-center gap-1">
+                What do you expect from this program? <span className="text-red-500">*</span>
+              </Label>
               <Textarea
                 id="expectations"
                 value={formData.expectations}
@@ -598,6 +661,7 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <Button
                 variant="default"
                 onClick={nextStep}
+                disabled={!isCurrentStepValid()}
                 className="flex items-center gap-2"
               >
                 Next
