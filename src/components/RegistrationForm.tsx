@@ -187,12 +187,13 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         field_of_study: formData.fieldOfStudy,
         team_name: formData.teamName,
         team_members: formData.teamMembers.filter(member => member.trim().length > 0),
-        program_mode: formData.programFormat,
-        project_domain: formData.projectDomain,
+        program_mode: formData.programFormat === 'physical' ? 'Physical' : 'Virtual',
+        project_domain: formData.projectDomain === 'hardware' ? 'Hardware' : 
+                       formData.projectDomain === 'software' ? 'Software' : 'Embedded',
         project_description: formData.projectDescription,
         previous_experience: formData.hasExperience === 'yes',
         expectations: formData.expectations,
-        status: 'pending'
+        status: 'Student'
       };
 
       const { error } = await supabase
