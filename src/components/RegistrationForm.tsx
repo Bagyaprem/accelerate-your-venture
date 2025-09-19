@@ -25,6 +25,7 @@ import {
   Target
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FormData {
   leaderName: string;
@@ -45,6 +46,7 @@ interface FormData {
 
 const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     leaderName: '',
     email: '',
@@ -159,7 +161,7 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const incompleteStep = findFirstIncompleteStep();
     if (incompleteStep) {
       setCurrentStep(incompleteStep);
@@ -171,11 +173,51 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       return;
     }
     
-    toast({
-      title: "Registration Successful! 🎉",
-      description: "Thank you for registering for ProductXcelerator. We'll send you further details via email.",
-    });
-    onClose();
+    setIsSubmitting(true);
+    
+    try {
+      // Transform form data to match database schema
+      const registrationData = {
+        leader_name: formData.leaderName,
+        email: formData.email,
+        whatsapp_number: formData.whatsapp,
+        state: formData.state,
+        district: formData.district,
+        institution: formData.institution,
+        field_of_study: formData.fieldOfStudy,
+        team_name: formData.teamName,
+        team_members: formData.teamMembers.filter(member => member.trim().length > 0),
+        program_mode: formData.programFormat,
+        project_domain: formData.projectDomain,
+        project_description: formData.projectDescription,
+        previous_experience: formData.hasExperience === 'yes',
+        expectations: formData.expectations,
+        status: 'pending'
+      };
+
+      const { error } = await supabase
+        .from('registrations')
+        .insert([registrationData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Registration Successful! 🎉",
+        description: "Thank you for registering for ProductXcelerator. We'll send you further details via email.",
+      });
+      onClose();
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStep = () => {
@@ -618,7 +660,7 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="text-center border-b">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
               ✕
             </Button>
             <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -652,10 +694,20 @@ const RegistrationForm = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               <Button
                 variant="hero"
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 className="flex items-center gap-2"
               >
-                <CheckCircle className="w-4 h-4" />
-                Submit Registration
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Submit Registration
+                  </>
+                )}
               </Button>
             ) : (
               <Button
